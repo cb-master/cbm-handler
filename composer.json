@@ -1,0 +1,17 @@
+{
+    "name": "cb-master/cbm-handler",
+    "type": "library",
+    "license": "GPL-3.0",
+    "autoload": {
+        "psr-4": {
+            "CBM\\Handler\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Cloud Bill Master",
+            "email": "strblackhawk@gmail.com"
+        }
+    ],
+    "require": {}
+}
