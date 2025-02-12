@@ -35,18 +35,18 @@ class Error Extends \Exception
             $count = count($trace) - 1;
             for ($i=$count; $i >= 0 ; $i--){
                 self::$errors[] = [
-                    'message'   =>  'Issues in Arguments!',
+                    'message'   =>  $e->errorInfo[2] ?? 'Issues in Database!',
                     'code'      =>  'PDO9009',
-                    'file'      =>  $trace[$i]['file'],
-                    'line'      =>  $trace[$i]['line']
+                    'file'      =>  $trace[$i]['file'] ?? "Class: {$trace[$i]['class']}",
+                    'line'      =>  $trace[$i]['line'] ?? 0
                 ];
             }
         }else{
             self::$errors[] = [
-                'message'   =>  $e->message,
-                'code'      =>  $e->code ?: 1000,
-                'file'      =>  $e->file,
-                'line'      =>  $e->line
+                'message'   =>  $e->getMessage(),
+                'code'      =>  $e->getCode() ?: 1000,
+                'file'      =>  $e->getFile(),
+                'line'      =>  $e->getLine()
             ];
         }
     }
@@ -62,6 +62,7 @@ class Error Extends \Exception
     {
         if($severity){
             Error::set($message, 1000, $filename, $lineno);
+            error_log("[1000]: {$message} in {$filename}>>{$lineno}.");
         }
     }
 
@@ -69,6 +70,7 @@ class Error Extends \Exception
     public static function exceptionHandler(\Throwable $e)
     {
         self::throw($e);
+        error_log("[{$e->getCode()}]: {$e->getMessage()} in {$e->getFile()}>>{$e->getLine()}.");
     }
 
     // Shutdown Function
@@ -78,6 +80,7 @@ class Error Extends \Exception
         $types = [E_ERROR, E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING, E_RECOVERABLE_ERROR];
         if($e && in_array($e['type'], $types)){
             Error::set($e['message'], 1000, $e['file'], $e['line']);
+            error_log("[1000]: {$e['message']} in {$e['file']}>>{$e['line']}.");
         }
 
         if(self::$errors && self::$display){
@@ -151,7 +154,7 @@ class Error Extends \Exception
                                 <th>File</th>
                                 <th>Line</th>
                             </tr>\n";
-                            foreach(self::$errors as $error):
+                            foreach(self::$errors as $error):                                
                                 $html .= "<tr>
                                 <td>{$error['code']}</td>
                                 <td>{$error['message']}</td>
