@@ -63,6 +63,7 @@ class Error Extends \Exception
         if($severity){
             Error::set($message, 1000, $filename, $lineno);
             error_log("[1000]: {$message} in {$filename}>>{$lineno}.");
+            die;
         }
     }
 
@@ -83,9 +84,22 @@ class Error Extends \Exception
             error_log("[1000]: {$e['message']} in {$e['file']}>>{$e['line']}.");
         }
 
-        if(self::$errors && self::$display){
+        if(self::$errors){
             http_response_code(500);
-            $html = "<style>
+            echo self::display_message();
+            die;
+        }
+    }
+
+    // Diplay Error Message
+    private static function display_message():string
+    {
+        $html = "<html>\n<head>\n<title>Application Error</title>\n</head>\n<body style=\"margin:0;\">\n<div style=\"height:100vh;position:relative;\">\n<h1 style=\"text-align:center;color:#ec8e8e; font-size:3rem; position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);margin:0;\">!! 500 Internal Server Error !!</h1>\n</div>\n</body></html>";
+        if(self::$display){
+            $html = "<html>
+            <head>
+                <title>Application Error</title>
+            <style>
             body{
                 position:relative;
                 margin:0;
@@ -143,34 +157,59 @@ class Error Extends \Exception
                 }
                 /* PHP Error CSS End */
             </style>
-            <div class=\"err-box\">
-                <div class=\"err-contents\">
-                    <h2>SYSTEM ERROR!</h2>
-                    <div class='table'>
-                        <table>
-                            <tr>
-                                <th>Code</th>
-                                <th>Messages</th>
-                                <th>File</th>
-                                <th>Line</th>
-                            </tr>\n";
-                            foreach(self::$errors as $error):                                
-                                $html .= "<tr>
-                                <td>{$error['code']}</td>
-                                <td>{$error['message']}</td>
-                                <td>{$error['file']}</td>
-                                <td>{$error['line']}</td>
-                            </tr>\n";
-                            endforeach;                        
-                        $html .= "</table>
+            </head>
+            <body>
+                <div class=\"err-box\">
+                    <div class=\"err-contents\">
+                        <h2>SYSTEM ERROR!</h2>
+                        <div class='table'>
+                            <table>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Messages</th>
+                                    <th>File</th>
+                                    <th>Line</th>
+                                </tr>\n";
+                                foreach(self::$errors as $error):                                
+                                    $html .= "<tr>
+                                    <td>{$error['code']}</td>
+                                    <td>{$error['message']}</td>
+                                    <td>{$error['file']}</td>
+                                    <td>{$error['line']}</td>
+                                </tr>\n";
+                                endforeach;                        
+                            $html .= "</table>
+                        </div>
                     </div>
                 </div>
-            </div>";
-        echo $html;
-        die;
-        }elseif(self::$errors && !self::$display){
-            http_response_code(500);
-            die;
+            </body>
+        </html>";
         }
+        return $html;
+    }
+
+    // Display Error & Store in File
+    /**
+     * @param $file - Optional Argument. Default is 
+     */
+    public static function registerErrorHandler(bool $throw = true, ?string $file = null, bool $log = true)
+    {
+        $file = $file ?: __DIR__.'/../../../../../error-log.log';
+        // Display Errors
+        self::$display = $throw;
+        ini_set('display_errors', $throw);
+        ini_set('error_reporting', ($throw ? E_ALL : $throw));
+        // Log Errors
+        if($log){
+            ini_set("log_errors", $throw);
+            if(!file_exists($file)){
+                file_put_contents($file, '');
+            }
+            ini_set('error_log', $file);
+        }
+
+        set_error_handler([Error::class, 'errorHandler']);
+        set_exception_handler([Error::class, 'exceptionHandler']);
+        register_shutdown_function([Error::class, 'shutdownHandler']);
     }
 }
