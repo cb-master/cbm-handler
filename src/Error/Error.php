@@ -63,7 +63,7 @@ class Error Extends \Exception
         if($severity){
             Error::set($message, 1000, $filename, $lineno);
             error_log("[1000]: {$message} in {$filename}>>{$lineno}.");
-            die;
+            // die;
         }
     }
 
