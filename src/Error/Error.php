@@ -96,9 +96,9 @@ class Error Extends \Exception
     /**
      * @param $file - Optional Argument. Default is 
      */
-    public static function registerErrorHandler(bool $throw = true, ?string $file = null, bool $log = true)
+    public static function registerErrorHandlers(bool $throw = true, ?string $file = null, bool $log = true)
     {
-        $file = $file ?: __DIR__.'/../../../../../error-log.log';
+        $file = $file ?: __DIR__.'/../../../../../error.log';
         // Display Errors
         self::$display = $throw;
         ini_set('display_errors', $throw);
